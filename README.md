@@ -25,22 +25,22 @@ flowchart TD
     subgraph MCPServer["3. FastMCP Core & Guardrails"]
         direction TB
         Router["FastMCP Server Core & Tool Router"]
-        AST["sqlglot AST Guardrail Sandbox<br/>- DDL/DML Rejection (DROP, INSERT, UPDATE)<br/>- GDPR Filter (oc_customer, oc_user)<br/>- Auto-Inject LIMIT 100"]
-        ShopTools["Shop Business Tools<br/>- Stock Levels (oc_product_option_value)<br/>- Sales Analytics (oc_order)"]
+        AST["sqlglot AST Guardrail Sandbox<br/>- DDL/DML Rejection<br/>- GDPR Filter<br/>- Auto-Inject LIMIT 100"]
+        ShopTools["Shop Business Tools<br/>- Stock Levels<br/>- Sales Analytics"]
     end
 
     %% Semantic Cache & Database
     subgraph DataCache["4. Sub-15ms Cache & Storage"]
         direction LR
-        ONNX["Local ONNX INT8 Engine<br/>(MiniLM-L12-v2 CPU &lt; 8ms)"]
-        Redis[("Redis Stack HNSW<br/>Similarity &gt;= 0.94")]
+        ONNX["Local ONNX INT8 Engine<br/>(MiniLM-L12-v2 CPU under 8ms)"]
+        Redis[("Redis Stack HNSW<br/>Similarity >= 0.94")]
         DB[("best4baby Database<br/>MySQL / SQLite Fixtures")]
     end
 
     %% Observability & GitOps
     subgraph OpsGitOps["5. Telemetry & GitOps"]
         direction LR
-        Telemetry["Prometheus & Grafana<br/>(Cache Hit %, RPS, p95/p99)"]
+        Telemetry["Prometheus & Grafana<br/>(Cache Hit %, RPS, Latency)"]
         Langfuse["Langfuse Tracing<br/>(Spans, Tokens, Latency)"]
         K3dGitOps["k3d Cluster (1 Server + 2 Agents)<br/>+ Argo CD GitOps + Helm"]
     end
@@ -48,12 +48,12 @@ flowchart TD
     %% Request & Cache Flow
     Clients -->|HTTP / SSE| LiteLLM
     LiteLLM -->|MCP Protocol| Router
-    Router -->|1. Check Semantic Cache| ONNX
+    Router -->|1. Check Cache| ONNX
     ONNX -->|2. KNN Vector Search| Redis
-    Redis --|Hit: Cached JSON (&lt;15ms)| Router
+    Redis -->|Hit: Cached JSON sub-15ms| Router
 
     %% Cache Miss -> AST Security -> DB Flow
-    Redis -.->|Miss: Forward Query| AST
+    Redis -->|Miss: Forward Query| AST
     AST -->|Sanitized Safe SQL| ShopTools
     ShopTools -->|Execute Query| DB
     DB -->|Result Set| ShopTools
@@ -61,9 +61,9 @@ flowchart TD
     ShopTools -->|Return Result| Router
 
     %% Observability & GitOps Connections
-    Router -.->|Metrics| Telemetry
-    Router -.->|Traces| Langfuse
-    K3dGitOps -.->|Sync & Deploy| MCPServer
+    Router -.-> Telemetry
+    Router -.-> Langfuse
+    K3dGitOps -.-> MCPServer
 ```
 
 ---
