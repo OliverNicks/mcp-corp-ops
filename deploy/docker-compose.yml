@@ -1,0 +1,194 @@
+version: "3.9"
+
+networks:
+  agent-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+  langfuse_postgres_data:
+
+services:
+  # 1. OpenCart Seeded Relational Database
+  mysql-db:
+    image: mysql:8.0
+    container_name: best4baby-mysql
+    restart: unless-stopped
+    networks:
+      - agent-network
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-best4baby}
+      MYSQL_USER: ${MYSQL_USER:-agent_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-agent_password}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ../data/fixtures/init_best4baby.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    healthcheck:
+      test:
+        - CMD
+        - mysqladmin
+        - ping
+        - -h
+        - localhost
+        - -u${MYSQL_USER:-agent_user}
+        - -p${MYSQL_PASSWORD:-agent_password}
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  # 2. Redis Stack (RediSearch + RedisJSON for Vector Similarity)
+  redis-stack:
+    image: redis/redis-stack-server:latest
+    container_name: mcp-redis-vector
+    restart: unless-stopped
+    networks:
+      - agent-network
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test:
+        - CMD
+        - redis-cli
+        - ping
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # 3. LiteLLM Proxy Gateway
+  litellm:
+    image: ghcr.io/berriai/litellm:main-v1.40.0
+    container_name: litellm-proxy
+    restart: unless-stopped
+    networks:
+      - agent-network
+    ports:
+      - "4000:4000"
+    environment:
+      GROQ_API_KEY: "${GROQ_API_KEY:-mock-groq-key}"
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-mock-openai-key}"
+      LITELLM_MASTER_KEY: "${LITELLM_MASTER_KEY:-sk-mcp-corporate-test-key}"
+    volumes:
+      - ../configs/litellm_config.yaml:/app/litellm_config.yaml:ro
+    command:
+      - "--config"
+      - "/app/litellm_config.yaml"
+      - "--port"
+      - "4000"
+      - "--host"
+      - "0.0.0.0"
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - "curl -f http://localhost:4000/health || exit 1"
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  # 4. FastMCP Application Brain
+  mcp-server:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.fastmcp
+    container_name: fastmcp-server
+    restart: unless-stopped
+    networks:
+      - agent-network
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      redis-stack:
+        condition: service_healthy
+      litellm:
+        condition: service_healthy
+    environment:
+      DB_HOST: mysql-db
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-best4baby}
+      DB_USER: ${MYSQL_USER:-agent_user}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-agent_password}
+      REDIS_URL: redis://redis-stack:6379/0
+      LITELLM_PROXY_URL: http://litellm:4000/v1
+      PORT: 8000
+      METRICS_PORT: 8000
+      LANGFUSE_HOST: http://langfuse:3000
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-pk-lf-mock}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-sk-lf-mock}
+    ports:
+      - "8000:8000"
+
+  # 5. Prometheus Telemetry Scraper
+  prometheus:
+    image: prom/prometheus:v2.49.1
+    container_name: mcp-prometheus
+    restart: unless-stopped
+    networks:
+      - agent-network
+    ports:
+      - "9090:9090"
+    volumes:
+      - ../configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.enable-lifecycle"
+
+  # 6. Grafana Operational Dashboards
+  grafana:
+    image: grafana/grafana:10.3.3
+    container_name: mcp-grafana
+    restart: unless-stopped
+    networks:
+      - agent-network
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ../dashboards/grafana:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+
+  # 7. Langfuse Tracing Server
+  langfuse:
+    image: langfuse/langfuse:2
+    container_name: mcp-langfuse
+    restart: unless-stopped
+    networks:
+      - agent-network
+    depends_on:
+      - langfuse-db
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@langfuse-db:5432/postgres
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-default-secret-salt-32-chars-long}
+      SALT: ${SALT:-default-salt-32-chars-length-here}
+      NEXTAUTH_URL: http://localhost:3000
+      TELEMETRY_ENABLED: "false"
+
+  langfuse-db:
+    image: postgres:15-alpine
+    container_name: langfuse-postgres
+    restart: unless-stopped
+    networks:
+      - agent-network
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - langfuse_postgres_data:/var/lib/postgresql/data
