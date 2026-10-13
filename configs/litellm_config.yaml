@@ -1,22 +1,29 @@
 model_list:
-  # Primary Provider (Groq Fast Inference)
   - model_name: enterprise-agent-llm
     litellm_params:
       model: groq/llama-3.3-70b-versatile
       api_key: os.environ/GROQ_API_KEY
       rpm: 30
+      timeout: 2.5
 
-  # Production Failover Provider (OpenAI)
   - model_name: enterprise-agent-llm
     litellm_params:
       model: openai/gpt-4o-mini
       api_key: os.environ/OPENAI_API_KEY
       rpm: 100
+      timeout: 2.5
+
+  - model_name: mock-agent-llm
+    litellm_params:
+      model: openai/mock-model
+      api_base: "http://127.0.0.1:4000/v1"
+      api_key: "mock-key"
 
 router_settings:
   routing_strategy: latency-based-routing
   allowed_fails: 2
   timeout: 2.5
+  cooldown_time: 30
   num_retries: 2
 
 general_settings:
