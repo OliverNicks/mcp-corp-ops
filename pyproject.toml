@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "my-fastmcp-project"
+version = "0.1.0"
+description = "A FastMCP application with SQL parsing and ONNX runtime support"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastmcp>=0.1.0",
+    "onnxruntime>=1.18.0",
+    "pydantic>=2.0.0",
+    "redis>=5.0.0",
+    "sqlalchemy>=2.0.0",
+    "sqlglot>=25.0.0",
+    "tokenizers>=0.19.0",
+]

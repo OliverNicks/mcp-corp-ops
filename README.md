@@ -200,3 +200,13 @@ mcp_corporate_agent_platform/
 3. **Semantic Cache Verification**: `uv run pytest tests/test_semantic_cache.py -v` (asserts hit at $\ge 0.94$, miss at $< 0.94$).
 4. **Synthetic Evaluation Suite**: `uv run python tests/eval_suite.py` (evaluates 50+ queries covering accuracy, safety, and cache efficiency).
 5. **Locust Stress Testing**: `locust -f locustfile.py --headless -u 50 -r 5 --run-time 1m` (measures throughput and p95/p99 latency under concurrency).
+
+---
+
+## 6. Detailed Engineering Track Plans
+
+For actionable step-by-step tasks, acceptance criteria, and team collaboration workflows, refer to:
+👉 **[Detailed Step-by-Step Implementation Plan (ML/AI vs MLOps)](docs/IMPLEMENTATION_PLAN.md)**
+- **Track A (ML / Agentic AI Engineer)**: FastMCP Core, `best4baby` business tools, `sqlglot` AST security sandbox, ONNX INT8 local vector engine, Redis HNSW semantic cache, and 50+ query evaluation suite.
+- **Track B (MLOps / Platform Engineer)**: LiteLLM proxy failover, Docker development stack, `k3d` 3-node Kubernetes cluster, Helm packaging, Argo CD GitOps, Prometheus & Grafana dashboards, Langfuse tracing, GitHub Actions CI/CD, and Locust load testing.
+
