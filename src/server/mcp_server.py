@@ -1,9 +1,25 @@
 """FastMCP Server Entrypoint for Corporate Agent Platform."""
 import argparse
 import sys
+import logging
+import os
 from fastmcp import FastMCP
 
-# 1. Initialize FastMCP server instance
+log_level = os.getenv('LOG_LEVEL', "INFO").upper()
+
+# Explicitly configure basicConfig
+logging.basicConfig(
+    level=getattr(logging, log_level, logging.INFO),
+    format="%(asctime)s | %(levelname)-8s | %(name)s - %(message)s",
+    datefmt="%H:%M:%S",
+    stream=sys.stderr,
+    force=True
+)
+# Create a module-specific logger instance
+logger = logging.getLogger("mcp_server")
+
+# Initialize FastMCP server instance
+logger.debug("Creating FastMCP instance: name='corporate-agent-platform'")
 mcp = FastMCP(
     name="corporate-agent-platform",
     dependencies=["pydantic", "sqlalchemy", "redis", "sqlglot"],
@@ -13,7 +29,14 @@ mcp = FastMCP(
 @mcp.tool()
 def health_check() -> dict[str, str]:
     """Return platform operational status."""
-    return {"status": "ok", "service": "corporate-agent-platform"}
+    # INFO: Claude invoked this tool
+    logger.info("Tool 'health_check' invoked")
+
+    payload = {"status": "ok", "service": "corporate-agent-platform"}
+    
+    # DEBUG: Exact payload returned to Claude
+    logger.debug("Health check result: %s", payload)
+    return payload
 
 
 # 3. CLI entrypoint supporting both STDIO (Claude Desktop) and SSE/HTTP (K8s/Docker)
@@ -30,18 +53,28 @@ def main() -> None:
 
     args = parser.parse_args()
 
+    # DEBUG: Show parsed arguments
+    logger.debug("Parsed CLI arguments: transport=%s, host=%s, port=%s", args.transport, args.host, args.port)
+
     if args.transport == "sse":
-        print(
-            f"Starting FastMCP SSE server on {args.host}:{args.port}...",
-            file=sys.stderr,
-        )
+        # INFO: High-level milestone for network services
+        logger.info("Starting FastMCP SSE server on http://%s:%d", args.host, args.port)
         mcp.settings.host = args.host
         mcp.settings.port = args.port
         mcp.run(transport="sse")
     else:
+        # INFO: Milestone for desktop integrations
+        logger.info("Starting FastMCP server over STDIO transport (Claude Desktop mode)...")
         # Default stdio transport for Claude Desktop / CLI clients
         mcp.run(transport="stdio")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        logger.info("Server terminated by user (KeyboardInterrupt)")
+    except Exception:
+        # Captures any fatal startup crash and routes the full traceback to stderr
+        logger.exception("Fatal error during MCP server execution")
+        sys.exit(1)
