@@ -1,77 +1,104 @@
 """
-Architectural Purpose
-
-litellm_client.py addresses three core requirements:
-
-Decoupling from Cloud Providers: The MCP server only talks to an OpenAI-compatible endpoint exposed by the LiteLLM proxy 
-(http://litellm:4000/v1), shielding the application from provider-specific SDK quirks.
-
-Offline CI/CD & Testing via MOCK_LLM: It supports a mock execution mode (MOCK_LLM=true) that returns synthetic, 
-deterministic completions without requiring live API keys or spending cloud credits during automated testing and Locust load runs.
-
-SLA & Resilience Enforcement: It enforces request timeouts (2.5-second SLA) and handles connection retries, allowing LiteLLM's internal 
-router to fail over from the primary model (groq/llama-3.3-70b) to the fallback (openai/gpt-4o-mini) seamlessly.
+LiteLLM Gateway Client with AsyncIO, Connection Pooling, and Pydantic Settings.
+Designed for high-throughput, non-blocking tool execution in FastMCP.
 """
 
-import os
-import time
+import asyncio
 import logging
-from typing import Dict, Any, List, Optional
+import time
+from typing import Any, Dict, List, Optional
 import httpx
-from pydantic import BaseModel
-from src.core.config import settings
+from pydantic import BaseModel, Field
+
+from src.core.config import Settings, settings as app_settings
 
 logger = logging.getLogger("litellm_client")
-logging.basicConfig(level=logging.INFO)
+
+
+class TokenUsage(BaseModel):
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
+
 
 class ChatCompletionResult(BaseModel):
     content: str
     model: str
     latency_ms: float
+    usage: TokenUsage = Field(default_factory=TokenUsage)
     simulated: bool = False
+
 
 class LiteLLMGatewayClient:
     """
-    Client interface for interacting with the LiteLLM Proxy gateway.
-    Handles fallback propagation, timeouts, and local mock testing.
+    Asynchronous client for the LiteLLM Proxy Gateway.
+
+    Key Features:
+    - Automatically configured from Pydantic Settings (src/core/config.py)
+    - Reusable connection pooling via httpx.AsyncClient (no per-request TCP handshakes)
+    - Native asyncio non-blocking I/O (prevents freezing the FastMCP event loop)
+    - SLA timeout handling with failover window support (5.0s client timeout vs 2.5s provider SLA)
+    - Offline MOCK_LLM mode with simulated latency for CI testing
     """
+
     def __init__(
         self,
+        config: Optional[Settings] = None,
         base_url: Optional[str] = None,
         api_key: Optional[str] = None,
+        timeout: Optional[float] = None,
         mock_llm: Optional[bool] = None,
-        timeout_seconds: Optional[float] = None,
     ):
-        self.base_url = (base_url or os.getenv("LITELLM_PROXY_URL", "http://localhost:4000/v1")).rstrip("/")
-        self.api_key = api_key or os.getenv("LITELLM_MASTER_KEY", "sk-mcp-corporate-test-key")
-        
-        env_mock = os.getenv("MOCK_LLM", "false").lower() in ("true", "1", "yes")
-        self.mock_llm = mock_llm if mock_llm is not None else env_mock
-        self.timeout_seconds = timeout_seconds or settings.litellm_timeout
+        cfg = config or app_settings
 
-    def complete(
+        raw_url = (base_url or cfg.litellm_proxy_url).rstrip("/")
+        self.base_url = raw_url if raw_url.endswith("/v1") else f"{raw_url}/v1"
+        self.api_key = api_key or cfg.litellm_master_key
+        self.timeout = timeout or cfg.litellm_timeout
+        self.mock_llm = mock_llm if mock_llm is not None else cfg.mock_llm
+
+        # Persistent connection pool limits
+        self._limits = httpx.Limits(
+            max_connections=cfg.litellm_max_connections,
+            max_keepalive_connections=cfg.litellm_max_keepalive,
+            keepalive_expiry=30.0,
+        )
+
+        self._headers = {
+            "Authorization": f"Bearer {self.api_key}",
+            "Content-Type": "application/json",
+        }
+
+        # Lazy async client instance
+        self._client: Optional[httpx.AsyncClient] = None
+
+    def _get_client(self) -> httpx.AsyncClient:
+        """Get or initialize the shared async client pool."""
+        if self._client is None or self._client.is_closed:
+            self._client = httpx.AsyncClient(
+                timeout=httpx.Timeout(self.timeout),
+                limits=self._limits,
+                headers=self._headers,
+            )
+        return self._client
+
+    async def acomplete(
         self,
         messages: List[Dict[str, str]],
         model: str = "enterprise-agent-llm",
         simulated_delay: float = 0.05,
     ) -> ChatCompletionResult:
+        """
+        Asynchronously sends a chat completion request to the LiteLLM proxy.
+        Yields control back to the asyncio event loop while waiting for response.
+        """
         start_time = time.perf_counter()
 
-        # Offline Mock path for CI/CD and zero-token test runs
+        # Offline Mock Mode (CI / Unit Tests)
         if self.mock_llm:
-            time.sleep(simulated_delay)
-            elapsed_ms = (time.perf_counter() - start_time) * 1000
-            return ChatCompletionResult(
-                content="SELECT COUNT(*) FROM oc_order;",
-                model="mock-agent-llm",
-                latency_ms=elapsed_ms,
-                simulated=True,
-            )
+            await asyncio.sleep(simulated_delay)
+            return self._build_mock_response(messages, start_time)
 
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
         payload = {
             "model": model,
             "messages": messages,
@@ -79,32 +106,80 @@ class LiteLLMGatewayClient:
         }
 
         try:
-            with httpx.Client(timeout=self.timeout_seconds) as client:
-                response = client.post(
-                    f"{self.base_url}/chat/completions",
-                    headers=headers,
-                    json=payload,
-                )
-                response.raise_for_status()
-                data = response.json()
-                
-                elapsed_ms = (time.perf_counter() - start_time) * 1000
-                content = data["choices"][0]["message"]["content"]
-                resolved_model = data.get("model", model)
-
-                return ChatCompletionResult(
-                    content=content,
-                    model=resolved_model,
-                    latency_ms=elapsed_ms,
-                    simulated=False,
-                )
+            client = self._get_client()
+            response = await client.post(
+                f"{self.base_url}/chat/completions",
+                json=payload,
+            )
+            response.raise_for_status()
+            return self._parse_response(response.json(), model, start_time)
 
         except httpx.TimeoutException as exc:
-            logger.error("LiteLLM router request timed out (> %.1fs): %s", self.timeout_seconds, exc)
-            raise TimeoutError(f"Gateway SLA exceeded ({self.timeout_seconds}s)") from exc
+            logger.error("LiteLLM request timed out (> %.1fs): %s", self.timeout, exc)
+            raise TimeoutError(f"Gateway SLA exceeded ({self.timeout}s)") from exc
         except httpx.HTTPStatusError as exc:
-            logger.error("LiteLLM router responded with error %d: %s", exc.response.status_code, exc.response.text)
-            raise RuntimeError(f"Proxy Gateway Error {exc.response.status_code}") from exc
+            logger.error("LiteLLM returned HTTP %d: %s", exc.response.status_code, exc.response.text)
+            raise RuntimeError(f"LiteLLM Gateway HTTP Error {exc.response.status_code}") from exc
         except httpx.RequestError as exc:
-            logger.error("Failed to connect to LiteLLM proxy: %s", exc)
-            raise ConnectionError(f"Could not reach LiteLLM proxy at {self.base_url}") from exc
+            logger.error("Network error reaching LiteLLM at %s: %s", self.base_url, exc)
+            raise ConnectionError(f"Could not reach LiteLLM gateway at {self.base_url}") from exc
+
+    def _parse_response(
+        self,
+        data: Dict[str, Any],
+        requested_model: str,
+        start_time: float,
+    ) -> ChatCompletionResult:
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+        content = data["choices"][0]["message"]["content"]
+        resolved_model = data.get("model", requested_model)
+        raw_usage = data.get("usage", {})
+
+        return ChatCompletionResult(
+            content=content,
+            model=resolved_model,
+            latency_ms=elapsed_ms,
+            usage=TokenUsage(
+                prompt_tokens=raw_usage.get("prompt_tokens", 0),
+                completion_tokens=raw_usage.get("completion_tokens", 0),
+                total_tokens=raw_usage.get("total_tokens", 0),
+            ),
+            simulated=False,
+        )
+
+    def _build_mock_response(
+        self,
+        messages: List[Dict[str, str]],
+        start_time: float,
+    ) -> ChatCompletionResult:
+        elapsed_ms = (time.perf_counter() - start_time) * 1000
+        user_query = " ".join([m.get("content", "") for m in messages]).lower()
+
+        if "stock" in user_query or "product" in user_query:
+            sql = "SELECT product_id, model, quantity, price FROM oc_product WHERE status = 1 LIMIT 100;"
+        elif "sales" in user_query or "revenue" in user_query or "order" in user_query:
+            sql = "SELECT COUNT(order_id) AS total_orders, SUM(total) AS gross_revenue FROM oc_order LIMIT 100;"
+        else:
+            sql = "SELECT product_id, model, quantity FROM oc_product LIMIT 100;"
+
+        return ChatCompletionResult(
+            content=sql,
+            model="mock-agent-llm",
+            latency_ms=elapsed_ms,
+            usage=TokenUsage(prompt_tokens=25, completion_tokens=15, total_tokens=40),
+            simulated=True,
+        )
+
+    # -------------------------------------------------------------------------
+    # Lifecycle Management
+    # -------------------------------------------------------------------------
+    async def aclose(self) -> None:
+        """Close the underlying connection pool."""
+        if self._client and not self._client.is_closed:
+            await self._client.aclose()
+
+    async def __aenter__(self) -> "LiteLLMGatewayClient":
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        await self.aclose()
