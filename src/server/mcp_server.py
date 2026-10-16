@@ -5,6 +5,8 @@ import logging
 import os
 from fastmcp import FastMCP
 
+from src.core.config import settings
+
 log_level = os.getenv('LOG_LEVEL', "INFO").upper()
 
 # Explicitly configure basicConfig
@@ -20,10 +22,7 @@ logger = logging.getLogger("mcp_server")
 
 # Initialize FastMCP server instance
 logger.debug("Creating FastMCP instance: name='corporate-agent-platform'")
-mcp = FastMCP(
-    name="corporate-agent-platform",
-    dependencies=["pydantic", "sqlalchemy", "redis", "sqlglot"],
-)
+mcp = FastMCP(name="corporate-agent-platform")
 
 # 2. Register sample / core tools
 @mcp.tool()
@@ -45,11 +44,11 @@ def main() -> None:
     parser.add_argument(
         "--transport",
         choices=["stdio", "sse"],
-        default="stdio",
+        default=settings.mcp_transport,
         help="Transport protocol: 'stdio' for desktop clients, 'sse' for HTTP/container deployments",
     )
-    parser.add_argument("--host", default="0.0.0.0", help="HTTP host for SSE")
-    parser.add_argument("--port", type=int, default=8000, help="HTTP port for SSE")
+    parser.add_argument("--host", default=settings.mcp_host, help="HTTP host for SSE")
+    parser.add_argument("--port", type=int, default=settings.mcp_port, help="HTTP port for SSE")
 
     args = parser.parse_args()
 
