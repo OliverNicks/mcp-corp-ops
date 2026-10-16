@@ -105,19 +105,36 @@ services:
       - agent-network
     depends_on:
       mysql-db:
-        condition: service_healthy
+        condition: service_healthy  # Only when all three health checks pass will Docker Compose execute the fastmcp-server container.
       redis-stack:
-        condition: service_healthy
+        condition: service_healthy  # Only when all three health checks pass will Docker Compose execute the fastmcp-server container.
       litellm:
-        condition: service_healthy
+        condition: service_healthy  # Only when all three health checks pass will Docker Compose execute the fastmcp-server container.
+    command:                        # Startup Command 
+      - "python"
+      - "-m"
+      - "src.server.mcp_server"
+      - "--transport"
+      - "sse"
+      - "--host"
+      - "0.0.0.0"
+      - "--port"
+      - "8000"
     environment:
+      # Transport settings
+      MCP_TRANSPORT: "sse"
+      MCP_HOST: "0.0.0.0"
+      MCP_PORT: "8000"
+      # Database connection
       DB_HOST: mysql-db
       DB_PORT: 3306
       DB_NAME: ${MYSQL_DATABASE:-best4baby}
       DB_USER: ${MYSQL_USER:-agent_user}
       DB_PASSWORD: ${MYSQL_PASSWORD:-agent_password}
+      # Semantic Cache & LLM Gateway
       REDIS_URL: redis://redis-stack:6379/0
       LITELLM_PROXY_URL: http://litellm:4000/v1
+      # Telemetry & Observability
       PORT: 8000
       METRICS_PORT: 8000
       LANGFUSE_HOST: http://langfuse:3000
@@ -125,6 +142,12 @@ services:
       LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-sk-lf-mock}
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/sse\")' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   # 5. Prometheus Telemetry Scraper
   prometheus:

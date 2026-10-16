@@ -1,3 +1,18 @@
+"""
+Architectural Purpose
+
+litellm_client.py addresses three core requirements:
+
+Decoupling from Cloud Providers: The MCP server only talks to an OpenAI-compatible endpoint exposed by the LiteLLM proxy 
+(http://litellm:4000/v1), shielding the application from provider-specific SDK quirks.
+
+Offline CI/CD & Testing via MOCK_LLM: It supports a mock execution mode (MOCK_LLM=true) that returns synthetic, 
+deterministic completions without requiring live API keys or spending cloud credits during automated testing and Locust load runs.
+
+SLA & Resilience Enforcement: It enforces request timeouts (2.5-second SLA) and handles connection retries, allowing LiteLLM's internal 
+router to fail over from the primary model (groq/llama-3.3-70b) to the fallback (openai/gpt-4o-mini) seamlessly.
+"""
+
 import os
 import time
 import logging
