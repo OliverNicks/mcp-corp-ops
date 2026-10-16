@@ -133,6 +133,7 @@ services:
       DB_PASSWORD: ${MYSQL_PASSWORD:-agent_password}
       # Semantic Cache & LLM Gateway
       REDIS_URL: redis://redis-stack:6379/0
+      LITELLM_MASTER_KEY: "${LITELLM_MASTER_KEY:-sk-mcp-corporate-test-key}"
       LITELLM_PROXY_URL: http://litellm:4000/v1
       # Telemetry & Observability
       PORT: 8000

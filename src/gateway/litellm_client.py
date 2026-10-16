@@ -19,6 +19,7 @@ import logging
 from typing import Dict, Any, List, Optional
 import httpx
 from pydantic import BaseModel
+from src.core.config import settings
 
 logger = logging.getLogger("litellm_client")
 logging.basicConfig(level=logging.INFO)
@@ -39,14 +40,14 @@ class LiteLLMGatewayClient:
         base_url: Optional[str] = None,
         api_key: Optional[str] = None,
         mock_llm: Optional[bool] = None,
-        timeout_seconds: float = 2.5,
+        timeout_seconds: Optional[float] = None,
     ):
         self.base_url = (base_url or os.getenv("LITELLM_PROXY_URL", "http://localhost:4000/v1")).rstrip("/")
         self.api_key = api_key or os.getenv("LITELLM_MASTER_KEY", "sk-mcp-corporate-test-key")
         
         env_mock = os.getenv("MOCK_LLM", "false").lower() in ("true", "1", "yes")
         self.mock_llm = mock_llm if mock_llm is not None else env_mock
-        self.timeout_seconds = timeout_seconds
+        self.timeout_seconds = timeout_seconds or settings.litellm_timeout
 
     def complete(
         self,
