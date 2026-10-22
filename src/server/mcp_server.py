@@ -6,6 +6,7 @@ import os
 from fastmcp import FastMCP
 
 from src.core.config import settings
+from src.server.tools.catalog_tool import register_catalog_tools
 
 log_level = os.getenv('LOG_LEVEL', "INFO").upper()
 
@@ -36,6 +37,10 @@ def health_check() -> dict[str, str]:
     # DEBUG: Exact payload returned to Claude
     logger.debug("Health check result: %s", payload)
     return payload
+
+
+# Register domain tools
+register_catalog_tools(mcp)
 
 
 # 3. CLI entrypoint supporting both STDIO (Claude Desktop) and SSE/HTTP (K8s/Docker)
