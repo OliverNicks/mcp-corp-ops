@@ -8,6 +8,7 @@ from fastmcp import FastMCP
 from src.core.config import settings
 from src.server.tools.catalog_tool import register_catalog_tools
 from src.server.tools.sales_tool import register_sales_tools
+from src.server.tools.sql_tool import register_sql_tools
 
 log_level = os.getenv('LOG_LEVEL', "INFO").upper()
 
@@ -43,6 +44,7 @@ def health_check() -> dict[str, str]:
 # Register domain tools
 register_catalog_tools(mcp)
 register_sales_tools(mcp)
+register_sql_tools(mcp)
 
 
 # 3. CLI entrypoint supporting both STDIO (Claude Desktop) and SSE/HTTP (K8s/Docker)
