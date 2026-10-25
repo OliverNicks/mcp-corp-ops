@@ -67,9 +67,13 @@ def main() -> None:
     if args.transport == "sse":
         # INFO: High-level milestone for network services
         logger.info("Starting FastMCP SSE server on http://%s:%d", args.host, args.port)
-        mcp.settings.host = args.host
-        mcp.settings.port = args.port
-        mcp.run(transport="sse")
+        if __name__ == "__main__":
+            # If using args parsing:
+            mcp.run(
+                transport="sse",  # or "http" depending on your transport choice
+                host=args.host,
+                port=args.port,
+            )
     else:
         # INFO: Milestone for desktop integrations
         logger.info("Starting FastMCP server over STDIO transport (Claude Desktop mode)...")

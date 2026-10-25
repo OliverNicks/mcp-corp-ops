@@ -63,7 +63,7 @@ services:
 
   # 3. LiteLLM Proxy Gateway
   litellm:
-    image: ghcr.io/berriai/litellm:main-v1.40.0
+    image: ghcr.io/berriai/litellm:main-latest
     container_name: litellm-proxy
     restart: unless-stopped
     networks:
@@ -75,10 +75,10 @@ services:
       OPENAI_API_KEY: "${OPENAI_API_KEY:-mock-openai-key}"
       LITELLM_MASTER_KEY: "${LITELLM_MASTER_KEY:-sk-mcp-corporate-test-key}"
     volumes:
-      - ../configs/litellm_config.yaml:/app/litellm_config.yaml:ro
+      - ../configs:/app/configs:ro
     command:
       - "--config"
-      - "/app/litellm_config.yaml"
+      - "/app/configs/litellm_config.yaml"
       - "--port"
       - "4000"
       - "--host"
