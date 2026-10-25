@@ -10,6 +10,7 @@ from typing import Any, Dict, Optional
 from fastmcp import FastMCP
 
 from src.core.db import db
+from src.core.telemetry import instrumented
 from src.security.schemas import SalesAnalyticsResult
 
 logger = logging.getLogger("sales_tool")
@@ -44,7 +45,7 @@ def _normalize_date_range(date_from: str, date_to: str) -> tuple[str, str]:
 
     return start_ts, end_ts
 
-
+@instrumented("get_sales_analytics")
 def get_sales_analytics(
     date_from: str,
     date_to: str,

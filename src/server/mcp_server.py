@@ -9,6 +9,8 @@ from src.core.config import settings
 from src.server.tools.catalog_tool import register_catalog_tools
 from src.server.tools.sales_tool import register_sales_tools
 from src.server.tools.sql_tool import register_sql_tools
+from src.core.telemetry import start_metrics_server
+
 
 log_level = os.getenv('LOG_LEVEL', "INFO").upper()
 
@@ -66,6 +68,7 @@ def main() -> None:
 
     if args.transport == "sse":
         # INFO: High-level milestone for network services
+        start_metrics_server(settings.metrics_port)
         logger.info("Starting FastMCP SSE server on http://%s:%d", args.host, args.port)
         if __name__ == "__main__":
             # If using args parsing:

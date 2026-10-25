@@ -8,6 +8,7 @@ from collections import defaultdict
 import logging
 from typing import Any, Dict, List, Optional
 from fastmcp import FastMCP
+from src.core.telemetry import instrumented
 
 from src.core.db import db
 from src.security.schemas import (
@@ -18,7 +19,7 @@ from src.security.schemas import (
 
 logger = logging.getLogger("catalog_tool")
 
-
+@instrumented("get_product_stock_levels")  
 def get_product_stock_levels(
     product_id: Optional[int] = None,
     sku: Optional[str] = None,
