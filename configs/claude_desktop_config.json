@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "corporate-agent-platform": {
+      "command": "uv",
+      "args": [
+        "run",
+        "python",
+        "-m",
+        "src.server.mcp_server",
+        "--transport",
+        "stdio"
+      ],
+      "env": {
+        "PYTHONPATH": ".",
+        "LOG_LEVEL": "DEBUG", 
+        "DB_ENGINE": "sqlite",
+        "SQLITE_PATH": "data/fixtures/best4baby.db"
+      }
+    }
+  }
+}
