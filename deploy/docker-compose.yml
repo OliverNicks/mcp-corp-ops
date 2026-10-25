@@ -1,5 +1,3 @@
-version: "3.9"
-
 networks:
   agent-network:
     driver: bridge
@@ -86,13 +84,11 @@ services:
       - "--host"
       - "0.0.0.0"
     healthcheck:
-      test:
-        - CMD-SHELL
-        - "curl -f http://localhost:4000/health || exit 1"
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:4000/health/liveliness')"]
       interval: 10s
       timeout: 3s
-      retries: 3
-      start_period: 5s
+      retries: 5
+      start_period: 20s
 
   # 4. FastMCP Application Brain
   mcp-server:
@@ -123,6 +119,8 @@ services:
       LANGFUSE_HOST: http://langfuse:3000
       LANGFUSE_PUBLIC_KEY: ${LANGFUSE_PUBLIC_KEY:-pk-lf-mock}
       LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-sk-lf-mock}
+      DB_ENGINE: mysql
+      MOCK_LLM: "true"
     ports:
       - "8000:8000"
 
