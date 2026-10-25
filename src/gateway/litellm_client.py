@@ -6,11 +6,13 @@ Designed for high-throughput, non-blocking tool execution in FastMCP.
 import asyncio
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 import httpx
 from pydantic import BaseModel, Field
 
-from src.core.config import Settings, settings as app_settings
+from src.core.config import Settings
+from src.core.config import settings as app_settings
 
 logger = logging.getLogger("litellm_client")
 
@@ -43,11 +45,11 @@ class LiteLLMGatewayClient:
 
     def __init__(
         self,
-        config: Optional[Settings] = None,
-        base_url: Optional[str] = None,
-        api_key: Optional[str] = None,
-        timeout: Optional[float] = None,
-        mock_llm: Optional[bool] = None,
+        config: Settings | None = None,
+        base_url: str | None = None,
+        api_key: str | None = None,
+        timeout: float | None = None,
+        mock_llm: bool | None = None,
     ):
         cfg = config or app_settings
 
@@ -70,7 +72,7 @@ class LiteLLMGatewayClient:
         }
 
         # Lazy async client instance
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
 
     def _get_client(self) -> httpx.AsyncClient:
         """Get or initialize the shared async client pool."""
@@ -84,7 +86,7 @@ class LiteLLMGatewayClient:
 
     async def acomplete(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         model: str = "enterprise-agent-llm",
         simulated_delay: float = 0.05,
     ) -> ChatCompletionResult:
@@ -126,7 +128,7 @@ class LiteLLMGatewayClient:
 
     def _parse_response(
         self,
-        data: Dict[str, Any],
+        data: dict[str, Any],
         requested_model: str,
         start_time: float,
     ) -> ChatCompletionResult:
@@ -149,7 +151,7 @@ class LiteLLMGatewayClient:
 
     def _build_mock_response(
         self,
-        messages: List[Dict[str, str]],
+        messages: list[dict[str, str]],
         start_time: float,
     ) -> ChatCompletionResult:
         elapsed_ms = (time.perf_counter() - start_time) * 1000

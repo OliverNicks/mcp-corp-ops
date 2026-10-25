@@ -4,13 +4,14 @@ Retrieves inventory stock levels across product variations (sizes/colors)
 by joining oc_product, oc_product_description, and oc_product_option_value.
 """
 
-from collections import defaultdict
 import logging
-from typing import Any, Dict, List, Optional
+from collections import defaultdict
+from typing import Any
+
 from fastmcp import FastMCP
-from src.core.telemetry import instrumented
 
 from src.core.db import db
+from src.core.telemetry import instrumented
 from src.security.schemas import (
     CatalogStockResult,
     ProductOptionStock,
@@ -19,11 +20,11 @@ from src.security.schemas import (
 
 logger = logging.getLogger("catalog_tool")
 
-@instrumented("get_product_stock_levels")  
+@instrumented("get_product_stock_levels")
 def get_product_stock_levels(
-    product_id: Optional[int] = None,
-    sku: Optional[str] = None,
-) -> Dict[str, Any]:
+    product_id: int | None = None,
+    sku: str | None = None,
+) -> dict[str, Any]:
     """
     Retrieves stock levels for an item by product ID or SKU across all option variations.
 
@@ -68,7 +69,7 @@ def get_product_stock_levels(
     ORDER BY p.product_id, pov.option_id, pov.option_value_id
     """
 
-    params: Dict[str, Any] = {
+    params: dict[str, Any] = {
         "pid_exact": product_id,
         "sku_exact": sku.strip() if sku else None,
         "sku_wildcard": f"%{sku.strip()}%" if sku else None,
@@ -92,7 +93,7 @@ def get_product_stock_levels(
         ).model_dump()
 
     # Group rows by product_id to aggregate option variations
-    grouped: Dict[int, Dict[str, Any]] = defaultdict(lambda: {"info": {}, "variations": []})
+    grouped: dict[int, dict[str, Any]] = defaultdict(lambda: {"info": {}, "variations": []})
 
     for row in raw_rows:
         pid = row["product_id"]
@@ -117,10 +118,10 @@ def get_product_stock_levels(
                 )
             )
 
-    product_responses: List[ProductStockResponse] = []
+    product_responses: list[ProductStockResponse] = []
     for pid, data in grouped.items():
         info = data["info"]
-        vars_list: List[ProductOptionStock] = data["variations"]
+        vars_list: list[ProductOptionStock] = data["variations"]
         total_var_stock = sum(v.quantity for v in vars_list) if vars_list else info["base_quantity"]
 
         product_responses.append(

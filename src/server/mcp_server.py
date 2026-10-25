@@ -1,16 +1,16 @@
 """FastMCP Server Entrypoint for Corporate Agent Platform."""
 import argparse
-import sys
 import logging
 import os
+import sys
+
 from fastmcp import FastMCP
 
 from src.core.config import settings
+from src.core.telemetry import start_metrics_server
 from src.server.tools.catalog_tool import register_catalog_tools
 from src.server.tools.sales_tool import register_sales_tools
 from src.server.tools.sql_tool import register_sql_tools
-from src.core.telemetry import start_metrics_server
-
 
 log_level = os.getenv('LOG_LEVEL', "INFO").upper()
 
@@ -37,7 +37,7 @@ def health_check() -> dict[str, str]:
     logger.info("Tool 'health_check' invoked")
 
     payload = {"status": "ok", "service": "corporate-agent-platform"}
-    
+
     # DEBUG: Exact payload returned to Claude
     logger.debug("Health check result: %s", payload)
     return payload

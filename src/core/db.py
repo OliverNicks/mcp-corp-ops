@@ -2,17 +2,18 @@
 Dual-Engine Database Abstraction (MySQL + SQLite).
 Supports connection pooling for MySQL and thread-safe fixtures for SQLite.
 """
-from contextlib import contextmanager
 import logging
-import os
+from collections.abc import Generator
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Optional
+from typing import Any
+
 from sqlalchemy import Connection, Engine, create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import NullPool, QueuePool, StaticPool
 
-from src.core.config import Settings, settings as default_settings
-
+from src.core.config import Settings
+from src.core.config import settings as default_settings
 
 logger = logging.getLogger("db")
 
@@ -21,10 +22,10 @@ class DatabaseManager:
     Manages database engines, connection pooling, and session lifecycles
     for both MySQL 8.0 and SQLite.
     """
-    def __init__(self, config: Optional[Settings] = None):
+    def __init__(self, config: Settings | None = None):
         self.config = config or default_settings
-        self._engine: Optional[Engine] = None
-        self._session_factory: Optional[sessionmaker] = None
+        self._engine: Engine | None = None
+        self._session_factory: sessionmaker | None = None
 
     @property
     def engine(self) -> Engine:
@@ -125,8 +126,8 @@ class DatabaseManager:
     def execute_query(
         self,
         query: str,
-        params: Optional[Dict[str, Any]] = None,
-    ) -> List[Dict[str, Any]]:
+        params: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
         """
         Executes a raw SQL statement and returns the rows as a list of dictionaries.
         Used by catalog_tool, sales_tool, and sql_tool.
