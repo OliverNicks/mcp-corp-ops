@@ -216,3 +216,45 @@ services:
       POSTGRES_DB: postgres
     volumes:
       - langfuse_postgres_data:/var/lib/postgresql/data
+  
+  mock-primary:
+    profiles: ["mock"]
+    image: python:3.12-slim
+    networks:
+      - agent-network
+    environment:
+      PROVIDER_NAME: primary
+    volumes:
+      - ../docker/mock_provider:/app:ro
+    command: ["python", "/app/server.py"]
+    ports:
+      - "9001:9000"
+
+  mock-fallback:
+    profiles: ["mock"]
+    image: python:3.12-slim
+    networks:
+      - agent-network
+    environment:
+      PROVIDER_NAME: fallback
+    volumes:
+      - ../docker/mock_provider:/app:ro
+    command: ["python", "/app/server.py"]
+    ports:
+      - "9002:9000"
+
+  litellm-mock:
+    profiles: ["mock"]
+    image: ghcr.io/berriai/litellm:main-v1.40.0   # same image line as your litellm service
+    networks:
+      - agent-network
+    depends_on:
+      - mock-primary
+      - mock-fallback
+    environment:
+      LITELLM_MASTER_KEY: "sk-mcp-corporate-test-key"
+    volumes:
+      - ../configs:/app/configs:ro
+    command: ["--config", "/app/configs/litellm_config.mock.yaml", "--port", "4000", "--host", "0.0.0.0"]
+    ports:
+      - "4001:4000"

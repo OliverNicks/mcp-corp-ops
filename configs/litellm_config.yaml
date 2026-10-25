@@ -24,7 +24,7 @@ router_settings:
   allowed_fails: 2
   timeout: 2.5
   cooldown_time: 30
-  num_retries: 2
+  num_retries: 0
 
 general_settings:
   master_key: sk-mcp-corporate-test-key

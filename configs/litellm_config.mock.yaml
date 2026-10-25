@@ -1,0 +1,24 @@
+model_list:
+  - model_name: enterprise-agent-llm
+    litellm_params:
+      model: openai/mock-primary
+      api_base: http://mock-primary:9000/v1
+      api_key: mock-key
+      timeout: 2.5
+
+  - model_name: enterprise-agent-llm-fallback
+    litellm_params:
+      model: openai/mock-fallback
+      api_base: http://mock-fallback:9000/v1
+      api_key: mock-key
+      timeout: 2.5
+
+router_settings:
+  num_retries: 0        # the fallback is the retry; see the note at the end
+  timeout: 2.5
+  allowed_fails: 100    # high on purpose: no cooldown, so every test tries the primary first
+  cooldown_time: 5
+  fallbacks: [{"enterprise-agent-llm": ["enterprise-agent-llm-fallback"]}]
+
+general_settings:
+  master_key: sk-mcp-corporate-test-key
