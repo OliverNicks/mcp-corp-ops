@@ -4,12 +4,14 @@ Aggregates gross revenue, total order volume, and average order value (AOV)
 from the oc_order table across configurable date ranges and order statuses.
 """
 
-from datetime import datetime
 import logging
-from typing import Any, Dict, Optional
+from datetime import datetime
+from typing import Any
+
 from fastmcp import FastMCP
 
 from src.core.db import db
+from src.core.telemetry import instrumented
 from src.security.schemas import SalesAnalyticsResult
 
 logger = logging.getLogger("sales_tool")
@@ -44,12 +46,12 @@ def _normalize_date_range(date_from: str, date_to: str) -> tuple[str, str]:
 
     return start_ts, end_ts
 
-
+@instrumented("get_sales_analytics")
 def get_sales_analytics(
     date_from: str,
     date_to: str,
-    status_id: Optional[int] = None,
-) -> Dict[str, Any]:
+    status_id: int | None = None,
+) -> dict[str, Any]:
     """
     Aggregates financial sales metrics from oc_order for business analytics.
 
@@ -89,7 +91,7 @@ def get_sales_analytics(
       AND (:status_id IS NULL OR order_status_id = :status_id)
     """
 
-    params: Dict[str, Any] = {
+    params: dict[str, Any] = {
         "start_date": start_ts,
         "end_date": end_ts,
         "status_id": status_id,

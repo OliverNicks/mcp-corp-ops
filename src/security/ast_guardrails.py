@@ -4,7 +4,7 @@ Enforces read-only safety, GDPR compliance, and unconstrained scan limits using 
 """
 
 import logging
-from typing import Optional, Set
+
 import sqlglot
 from sqlglot import exp
 from sqlglot.errors import ParseError
@@ -44,7 +44,7 @@ class InvalidQueryError(SecurityViolationError):
 # =============================================================================
 # 2. Security Blacklists & Constrained Types
 # =============================================================================
-RESTRICTED_TABLES: Set[str] = {
+RESTRICTED_TABLES: set[str] = {
     "oc_customer",
     "oc_user",
     "customer",
@@ -60,7 +60,7 @@ RESTRICTED_TABLES: Set[str] = {
     "admin_users",
 }
 
-RESTRICTED_COLUMNS: Set[str] = {
+RESTRICTED_COLUMNS: set[str] = {
     "telephone",
     "email",
     "password",
@@ -104,7 +104,7 @@ FORBIDDEN_DDL_TYPES = (
 # =============================================================================
 def validate_and_sanitize_query(
     raw_query: str,
-    dialect: Optional[str] = None,
+    dialect: str | None = None,
     max_limit: int = 100,
 ) -> str:
     """

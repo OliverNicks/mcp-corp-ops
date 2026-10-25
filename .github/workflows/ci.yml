@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main, mcp_corporate_agent_platform]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      DB_ENGINE: sqlite
+      MOCK_LLM: "true"
+      PYTHONPATH: .
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: uv sync --frozen --extra dev
+
+      - name: Lint (ruff)
+        run: uv run ruff check src tests
+
+      - name: Unit tests
+        run: uv run pytest tests/test_ast_guardrails.py tests/test_mcp_tools.py tests/test_gateway_failover.py tests/test_telemetry.py -v
+
+      - name: Type check (mypy)
+        run: uv run mypy src
+        continue-on-error: true   # make blocking once the errors are cleaned up
+
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate docker compose
+        run: |
+          docker compose -f deploy/docker-compose.yml config -q
+          docker compose -f deploy/docker-compose.yml --profile mock config -q
+      - name: Build MCP server image
+        run: docker build -f docker/Dockerfile.fastmcp -t mcp-server:ci .

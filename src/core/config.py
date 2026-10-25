@@ -4,7 +4,8 @@ Loads database URLs, Redis parameters, semantic cache similarity thresholds,
 LiteLLM proxy credentials, and platform mode flags from environment variables and .env files.
 """
 
-from typing import Literal, Optional
+from typing import Literal
+
 from pydantic import AliasChoices, Field, computed_field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -84,12 +85,12 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("REDIS_DB"),
         description="Redis logical database index",
     )
-    redis_password: Optional[str] = Field(
+    redis_password: str | None = Field(
         default=None,
         validation_alias=AliasChoices("REDIS_PASSWORD"),
         description="Optional Redis password",
     )
-    raw_redis_url: Optional[str] = Field(
+    raw_redis_url: str | None = Field(
         default=None,
         validation_alias=AliasChoices("REDIS_URL"),
         description="Direct connection string override for Redis",

@@ -6,10 +6,12 @@ LIMIT enforcement, and secure query execution against the database.
 
 import logging
 import time
-from typing import Any, Dict
+from typing import Any
+
 from fastmcp import FastMCP
 
 from src.core.db import db
+from src.core.telemetry import instrumented, record_rejection
 from src.security.ast_guardrails import (
     SecurityViolationError,
     validate_and_sanitize_query,
@@ -18,8 +20,8 @@ from src.security.schemas import SafeQueryResult
 
 logger = logging.getLogger("sql_tool")
 
-
-def execute_safe_query(query: str, query_purpose: str) -> Dict[str, Any]:
+@instrumented("execute_safe_query")
+def execute_safe_query(query: str, query_purpose: str) -> dict[str, Any]:
     """
     Validates and securely executes an ad-hoc SQL query through the AST security guardrails.
 
@@ -49,6 +51,7 @@ def execute_safe_query(query: str, query_purpose: str) -> Dict[str, Any]:
     try:
         sanitized_sql = validate_and_sanitize_query(query)
     except SecurityViolationError as exc:
+        record_rejection(exc)
         elapsed_ms = round((time.perf_counter() - start_time) * 1000, 2)
         logger.warning("Query rejected by AST guardrails: %s", exc)
         return SafeQueryResult(
@@ -60,6 +63,7 @@ def execute_safe_query(query: str, query_purpose: str) -> Dict[str, Any]:
             error=str(exc),
         ).model_dump()
     except Exception as exc:
+        record_rejection(exc)
         elapsed_ms = round((time.perf_counter() - start_time) * 1000, 2)
         logger.error("Unexpected error parsing query: %s", exc)
         return SafeQueryResult(

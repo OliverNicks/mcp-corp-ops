@@ -21,7 +21,6 @@ from src.security.ast_guardrails import (
 )
 from src.server.tools.sql_tool import execute_safe_query
 
-
 # Initialize SQLite test fixtures
 seed_sqlite()
 

@@ -1,11 +1,13 @@
 """FastMCP Server Entrypoint for Corporate Agent Platform."""
 import argparse
-import sys
 import logging
 import os
+import sys
+
 from fastmcp import FastMCP
 
 from src.core.config import settings
+from src.core.telemetry import start_metrics_server
 from src.server.tools.catalog_tool import register_catalog_tools
 from src.server.tools.sales_tool import register_sales_tools
 from src.server.tools.sql_tool import register_sql_tools
@@ -35,7 +37,7 @@ def health_check() -> dict[str, str]:
     logger.info("Tool 'health_check' invoked")
 
     payload = {"status": "ok", "service": "corporate-agent-platform"}
-    
+
     # DEBUG: Exact payload returned to Claude
     logger.debug("Health check result: %s", payload)
     return payload
@@ -66,10 +68,15 @@ def main() -> None:
 
     if args.transport == "sse":
         # INFO: High-level milestone for network services
+        start_metrics_server(settings.metrics_port)
         logger.info("Starting FastMCP SSE server on http://%s:%d", args.host, args.port)
-        mcp.settings.host = args.host
-        mcp.settings.port = args.port
-        mcp.run(transport="sse")
+        if __name__ == "__main__":
+            # If using args parsing:
+            mcp.run(
+                transport="sse",  # or "http" depending on your transport choice
+                host=args.host,
+                port=args.port,
+            )
     else:
         # INFO: Milestone for desktop integrations
         logger.info("Starting FastMCP server over STDIO transport (Claude Desktop mode)...")
