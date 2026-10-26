@@ -133,7 +133,7 @@ def test_sales_analytics_invalid_date_format():
     else:
         try:
             get_sales_analytics("2026/10/01", "2026-10-31")
-            assert False, "Expected ValueError on invalid date"
+            raise AssertionError("Expected ValueError on invalid date")
         except ValueError as exc:
             assert "Date formatting error" in str(exc)
 
@@ -146,7 +146,7 @@ def test_sales_analytics_inverted_date_range():
     else:
         try:
             get_sales_analytics("2026-11-01", "2026-10-01")
-            assert False, "Expected ValueError on inverted dates"
+            raise AssertionError("Expected ValueError on inverted dates")
         except ValueError as exc:
             assert "must be before or equal to" in str(exc)
 
