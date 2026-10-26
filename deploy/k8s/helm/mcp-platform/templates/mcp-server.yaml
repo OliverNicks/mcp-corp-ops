@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}-mcp-server
+spec:
+  replicas: {{ .Values.mcpServer.replicaCount }}
+  selector:
+    matchLabels:
+      app: mcp-server
+  template:
+    metadata:
+      labels:
+        app: mcp-server
+    spec:
+      containers:
+        - name: mcp-server
+          image: mcp-server:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: {{ .Values.mcpServer.resources.requests.cpu }}
+              memory: {{ .Values.mcpServer.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.mcpServer.resources.limits.cpu }}
+              memory: {{ .Values.mcpServer.resources.limits.memory }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Chart.Name }}-mcp-server
+spec:
+  ports:
+    - port: 8000
+  selector:
+    app: mcp-server

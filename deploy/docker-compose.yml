@@ -139,6 +139,7 @@ services:
       LANGFUSE_SECRET_KEY: ${LANGFUSE_SECRET_KEY:-sk-lf-mock}
       DB_ENGINE: mysql
       MOCK_LLM: "true"
+      LANGFUSE_ENABLED: ${LANGFUSE_ENABLED:-false}
     ports:
     - "8000:8000"
     - "9100:9100" 

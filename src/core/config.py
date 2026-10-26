@@ -213,6 +213,11 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("METRICS_PORT"),
         description="Port exposed for Prometheus metrics scraping",
     )
+    langfuse_enabled: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("LANGFUSE_ENABLED"),
+        description="Send traces to Langfuse (requires real API keys)",
+    )
 
 
 # Singleton instance loaded upon import
