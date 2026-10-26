@@ -114,6 +114,9 @@ class DatabaseManager:
         """Provides a managed SQLAlchemy ORM session."""
         if self._session_factory is None:
             _ = self.engine  # Trigger lazy creation
+
+        assert self._session_factory is not None, "Database session factory failed to initialize"
+        
         session: Session = self._session_factory()
         try:
             yield session
