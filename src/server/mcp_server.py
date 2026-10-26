@@ -1,4 +1,5 @@
 """FastMCP Server Entrypoint for Corporate Agent Platform."""
+
 import argparse
 import logging
 import os
@@ -12,7 +13,7 @@ from src.server.tools.catalog_tool import register_catalog_tools
 from src.server.tools.sales_tool import register_sales_tools
 from src.server.tools.sql_tool import register_sql_tools
 
-log_level = os.getenv('LOG_LEVEL', "INFO").upper()
+log_level = os.getenv("LOG_LEVEL", "INFO").upper()
 
 # Explicitly configure basicConfig
 logging.basicConfig(
@@ -20,7 +21,7 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)-8s | %(name)s - %(message)s",
     datefmt="%H:%M:%S",
     stream=sys.stderr,
-    force=True
+    force=True,
 )
 # Create a module-specific logger instance
 logger = logging.getLogger("mcp_server")
@@ -28,6 +29,7 @@ logger = logging.getLogger("mcp_server")
 # Initialize FastMCP server instance
 logger.debug("Creating FastMCP instance: name='corporate-agent-platform'")
 mcp = FastMCP(name="corporate-agent-platform")
+
 
 # 2. Register sample / core tools
 @mcp.tool()
@@ -64,7 +66,9 @@ def main() -> None:
     args = parser.parse_args()
 
     # DEBUG: Show parsed arguments
-    logger.debug("Parsed CLI arguments: transport=%s, host=%s, port=%s", args.transport, args.host, args.port)
+    logger.debug(
+        "Parsed CLI arguments: transport=%s, host=%s, port=%s", args.transport, args.host, args.port
+    )
 
     if args.transport == "sse":
         # INFO: High-level milestone for network services

@@ -42,9 +42,12 @@ def _normalize_date_range(date_from: str, date_to: str) -> tuple[str, str]:
         end_ts = date_to
 
     if start_ts > end_ts:
-        raise ValueError(f"Invalid date range: date_from ('{date_from}') must be before or equal to date_to ('{date_to}').")
+        raise ValueError(
+            f"Invalid date range: date_from ('{date_from}') must be before or equal to date_to ('{date_to}')."
+        )
 
     return start_ts, end_ts
+
 
 @instrumented("get_sales_analytics")
 def get_sales_analytics(

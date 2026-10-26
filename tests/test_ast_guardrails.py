@@ -285,7 +285,9 @@ if __name__ == "__main__":
         + 3  # tool e2e
     )
 
-    print(f"Executing AST Security Sandbox Guardrail Suite ({total_scenarios} test scenarios across {len(test_functions)} test functions)...")
+    print(
+        f"Executing AST Security Sandbox Guardrail Suite ({total_scenarios} test scenarios across {len(test_functions)} test functions)..."
+    )
     for fn in test_functions:
         fn()
         print(f"  [PASS] {fn.__name__}")

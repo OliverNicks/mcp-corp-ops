@@ -1,4 +1,5 @@
 """Prometheus metrics for the MCP platform (Ops-6)."""
+
 import functools
 import logging
 import threading
@@ -17,20 +18,38 @@ from src.security.ast_guardrails import (
 logger = logging.getLogger("telemetry")
 
 # Sub-10ms buckets for cache hits, up to 5s for LLM/DB misses
-LATENCY_BUCKETS = (0.001, 0.002, 0.005, 0.01, 0.015, 0.025, 0.05,
-                   0.1, 0.25, 0.5, 1.0, 1.5, 2.5, 5.0)
+LATENCY_BUCKETS = (
+    0.001,
+    0.002,
+    0.005,
+    0.01,
+    0.015,
+    0.025,
+    0.05,
+    0.1,
+    0.25,
+    0.5,
+    1.0,
+    1.5,
+    2.5,
+    5.0,
+)
 
 CACHE_HITS = Counter("mcp_cache_hits_total", "Semantic cache hits")
 CACHE_MISSES = Counter("mcp_cache_misses_total", "Semantic cache misses")
 CACHE_HIT_RATIO = Gauge("mcp_cache_hit_ratio", "Cache hits / (hits + misses)")
 
 REQUEST_DURATION = Histogram(
-    "mcp_request_duration_seconds", "Tool call latency",
-    ["tool"], buckets=LATENCY_BUCKETS,
+    "mcp_request_duration_seconds",
+    "Tool call latency",
+    ["tool"],
+    buckets=LATENCY_BUCKETS,
 )
 TOOL_CALLS = Counter("mcp_tool_calls_total", "Tool calls", ["tool", "status"])
 GUARDRAIL_REJECTIONS = Counter(
-    "mcp_sql_guardrail_rejections_total", "Queries blocked by AST guardrails", ["reason"],
+    "mcp_sql_guardrail_rejections_total",
+    "Queries blocked by AST guardrails",
+    ["reason"],
 )
 
 _lock = threading.Lock()
@@ -80,6 +99,7 @@ def record_rejection(exc: Exception) -> None:
 
 def instrumented(tool: str):
     """Decorator: records latency and success/rejected/error status per tool call."""
+
     def decorator(fn):
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
@@ -96,7 +116,9 @@ def instrumented(tool: str):
             finally:
                 REQUEST_DURATION.labels(tool=tool).observe(time.perf_counter() - start)
                 TOOL_CALLS.labels(tool=tool, status=status).inc()
+
         return wrapper
+
     return decorator
 
 

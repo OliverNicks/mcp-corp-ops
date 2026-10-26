@@ -20,6 +20,7 @@ from src.security.schemas import (
 
 logger = logging.getLogger("catalog_tool")
 
+
 @instrumented("get_product_stock_levels")
 def get_product_stock_levels(
     product_id: int | None = None,

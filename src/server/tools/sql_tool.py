@@ -20,6 +20,7 @@ from src.security.schemas import SafeQueryResult
 
 logger = logging.getLogger("sql_tool")
 
+
 @instrumented("execute_safe_query")
 def execute_safe_query(query: str, query_purpose: str) -> dict[str, Any]:
     """
