@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mcp-platform
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/OliverNicks/mcp-corp-ops.git'
+    targetRevision: HEAD
+    path: deploy/k8s/helm/mcp-platform
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: mcp-platform
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

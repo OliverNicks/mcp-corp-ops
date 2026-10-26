@@ -14,11 +14,13 @@ from src.server.tools.catalog_tool import get_product_stock_levels
 from src.server.tools.sales_tool import get_sales_analytics
 
 if pytest:
+
     @pytest.fixture(scope="session", autouse=True)
     def init_test_db():
         """Ensures test SQLite fixtures are populated before executing tool tests."""
         seed_sqlite()
 else:
+
     def init_test_db():
         seed_sqlite()
 

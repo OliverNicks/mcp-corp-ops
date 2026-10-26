@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Chart.Name }}-ingress
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /llm
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Chart.Name }}-litellm
+                port:
+                  number: 4000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ .Chart.Name }}-mcp-server
+                port:
+                  number: 8000

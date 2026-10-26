@@ -157,14 +157,20 @@ def validate_and_sanitize_query(
             raise DMLNotAllowedError(f"DML operation '{type(ast).__name__}' is strictly forbidden.")
         if isinstance(ast, FORBIDDEN_DDL_TYPES):
             raise DDLNotAllowedError(f"DDL operation '{type(ast).__name__}' is strictly forbidden.")
-        raise SecurityViolationError(f"Query root must be a SELECT or UNION statement, got '{type(ast).__name__}'.")
+        raise SecurityViolationError(
+            f"Query root must be a SELECT or UNION statement, got '{type(ast).__name__}'."
+        )
 
     # Deep AST tree inspection for embedded/subquery mutation nodes
     for node in ast.walk():
         if isinstance(node, FORBIDDEN_DML_TYPES):
-            raise DMLNotAllowedError(f"Embedded DML operation '{type(node).__name__}' is forbidden.")
+            raise DMLNotAllowedError(
+                f"Embedded DML operation '{type(node).__name__}' is forbidden."
+            )
         if isinstance(node, FORBIDDEN_DDL_TYPES):
-            raise DDLNotAllowedError(f"Embedded DDL operation '{type(node).__name__}' is forbidden.")
+            raise DDLNotAllowedError(
+                f"Embedded DDL operation '{type(node).__name__}' is forbidden."
+            )
 
     # 3. GDPR & Privacy Access Control (Table & Column Walking)
     # Check Table References

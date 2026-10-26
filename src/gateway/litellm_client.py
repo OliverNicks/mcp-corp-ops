@@ -120,7 +120,9 @@ class LiteLLMGatewayClient:
             logger.error("LiteLLM request timed out (> %.1fs): %s", self.timeout, exc)
             raise TimeoutError(f"Gateway SLA exceeded ({self.timeout}s)") from exc
         except httpx.HTTPStatusError as exc:
-            logger.error("LiteLLM returned HTTP %d: %s", exc.response.status_code, exc.response.text)
+            logger.error(
+                "LiteLLM returned HTTP %d: %s", exc.response.status_code, exc.response.text
+            )
             raise RuntimeError(f"LiteLLM Gateway HTTP Error {exc.response.status_code}") from exc
         except httpx.RequestError as exc:
             logger.error("Network error reaching LiteLLM at %s: %s", self.base_url, exc)

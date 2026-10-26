@@ -1,0 +1,44 @@
+name: Prompt Eval
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    env:
+      DB_ENGINE: sqlite
+      MOCK_LLM: "true"
+      PYTHONPATH: .
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check eval suite exists
+        id: gate
+        run: |
+          if [ -f tests/eval_suite.py ] && [ -f data/eval_dataset.json ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::eval_suite.py or eval_dataset.json not present yet, skipping"
+          fi
+
+      - uses: astral-sh/setup-uv@v5
+        if: steps.gate.outputs.ready == 'true'
+
+      - name: Install dependencies
+        if: steps.gate.outputs.ready == 'true'
+        run: uv sync --frozen --extra dev
+
+      - name: Run evaluation suite
+        if: steps.gate.outputs.ready == 'true'
+        run: uv run python tests/eval_suite.py | tee eval_report.md
+
+      - name: Upload report
+        if: steps.gate.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: eval_report.md

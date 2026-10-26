@@ -65,7 +65,7 @@ dependencies = [
     
     # Telemetry & Observability
     "prometheus-client>=0.20.0",
-    "langfuse>=2.0.0",
+   "langfuse>=2.0.0,<3",
 ]
 
 [project.optional-dependencies]

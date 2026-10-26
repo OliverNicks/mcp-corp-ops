@@ -1,0 +1,19 @@
+# Default production values
+mcpServer:
+  replicaCount: 2
+  resources:
+    requests:
+      cpu: 500m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+litellm:
+  replicaCount: 2
+
+mysql:
+  database: best4baby
+  user: agent_user
+  password: agent_password
+  rootPassword: rootpassword

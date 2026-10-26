@@ -2,6 +2,7 @@
 Dual-Engine Database Abstraction (MySQL + SQLite).
 Supports connection pooling for MySQL and thread-safe fixtures for SQLite.
 """
+
 import logging
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -17,11 +18,13 @@ from src.core.config import settings as default_settings
 
 logger = logging.getLogger("db")
 
+
 class DatabaseManager:
     """
     Manages database engines, connection pooling, and session lifecycles
     for both MySQL 8.0 and SQLite.
     """
+
     def __init__(self, config: Settings | None = None):
         self.config = config or default_settings
         self._engine: Engine | None = None
@@ -31,7 +34,6 @@ class DatabaseManager:
     def engine(self) -> Engine:
         """Lazy-initializes and returns the active SQLAlchemy Engine."""
         if self._engine is None:
-
             self._engine = self._create_engine()
             self._session_factory = sessionmaker(
                 bind=self._engine,
@@ -49,7 +51,9 @@ class DatabaseManager:
         elif db_engine_type == "mysql":
             return self._create_mysql_engine()
         else:
-            raise ValueError(f"Unsupported DB_ENGINE: '{db_engine_type}'. Choose 'sqlite' or 'mysql'.")
+            raise ValueError(
+                f"Unsupported DB_ENGINE: '{db_engine_type}'. Choose 'sqlite' or 'mysql'."
+            )
 
     def _create_sqlite_engine(self) -> Engine:
         """Builds an SQLite engine tailored for local testing and CI fixtures."""
@@ -85,11 +89,11 @@ class DatabaseManager:
         return create_engine(
             url,
             poolclass=QueuePool,
-            pool_size=10,            # Normal pool capacity
-            max_overflow=20,         # Extra surge connections allowed under load (Locust 50 VU)
-            pool_timeout=30.0,       # Wait up to 30s for an available socket before raising TimeoutError
-            pool_recycle=1800,       # Recycle sockets older than 30 mins to prevent MySQL wait_timeout drops
-            pool_pre_ping=True,      # Tests connection liveness with SELECT 1 before checkout
+            pool_size=10,  # Normal pool capacity
+            max_overflow=20,  # Extra surge connections allowed under load (Locust 50 VU)
+            pool_timeout=30.0,  # Wait up to 30s for an available socket before raising TimeoutError
+            pool_recycle=1800,  # Recycle sockets older than 30 mins to prevent MySQL wait_timeout drops
+            pool_pre_ping=True,  # Tests connection liveness with SELECT 1 before checkout
             echo=self.config.debug,
         )
 
@@ -110,6 +114,9 @@ class DatabaseManager:
         """Provides a managed SQLAlchemy ORM session."""
         if self._session_factory is None:
             _ = self.engine  # Trigger lazy creation
+
+        assert self._session_factory is not None, "Database session factory failed to initialize"
+        
         session: Session = self._session_factory()
         try:
             yield session
@@ -139,6 +146,7 @@ class DatabaseManager:
                 return [dict(row) for row in result.mappings().all()]
             conn.commit()
             return []
+
     def check_health(self) -> bool:
         """Verifies database connectivity with a lightweight ping query."""
         try:
@@ -148,11 +156,14 @@ class DatabaseManager:
         except Exception as exc:
             logger.error("Database health check failed: %s", exc)
             return False
+
     def dispose(self) -> None:
         """Disposes connection pool resources on shutdown."""
         if self._engine:
             self._engine.dispose()
             self._engine = None
             self._session_factory = None
+
+
 # Global singleton instance
 db = DatabaseManager()

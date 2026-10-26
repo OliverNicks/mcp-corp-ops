@@ -1,0 +1,13 @@
+# Local developer overrides (smaller footprints for k3d)
+mcpServer:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+litellm:
+  replicaCount: 1
