@@ -98,7 +98,7 @@ def test_ddl_operations_blocked():
     for query in DDL_TEST_CASES:
         try:
             validate_and_sanitize_query(query)
-            raise AssertionError(f"Failed to block DDL query: {query}") 
+            raise AssertionError(f"Failed to block DDL query: {query}")
         except DDLNotAllowedError:
             pass  # Expected
 
@@ -212,7 +212,7 @@ def test_empty_and_malformed_queries_blocked():
     for query in invalid_cases:
         try:
             validate_and_sanitize_query(query)
-            raise AssertionError(f"Failed to block malformed query: {query}") 
+            raise AssertionError(f"Failed to block malformed query: {query}")
         except InvalidQueryError:
             pass  # Expected
 
