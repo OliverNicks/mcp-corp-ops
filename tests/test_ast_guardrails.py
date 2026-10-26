@@ -98,7 +98,7 @@ def test_ddl_operations_blocked():
     for query in DDL_TEST_CASES:
         try:
             validate_and_sanitize_query(query)
-            assert False, f"Failed to block DDL query: {query}"
+            raise AssertionError(f"Failed to block DDL query: {query}") 
         except DDLNotAllowedError:
             pass  # Expected
 
@@ -122,7 +122,7 @@ def test_dml_operations_blocked():
     for query in DML_TEST_CASES:
         try:
             validate_and_sanitize_query(query)
-            assert False, f"Failed to block DML query: {query}"
+            raise AssertionError(f"Failed to block DML query: {query}")
         except DMLNotAllowedError:
             pass  # Expected
 
@@ -151,7 +151,7 @@ def test_gdpr_table_access_blocked():
     for query in GDPR_TABLE_TEST_CASES:
         try:
             validate_and_sanitize_query(query)
-            assert False, f"Failed to block GDPR table access: {query}"
+            raise AssertionError(f"Failed to block GDPR table access: {query}")
         except GDPRViolationError:
             pass  # Expected
 
@@ -175,7 +175,7 @@ def test_gdpr_column_access_blocked():
     for query in GDPR_COLUMN_TEST_CASES:
         try:
             validate_and_sanitize_query(query)
-            assert False, f"Failed to block sensitive PII column: {query}"
+            raise AssertionError(f"Failed to block sensitive PII column: {query}")
         except GDPRViolationError:
             pass  # Expected
 
@@ -196,7 +196,7 @@ def test_stacked_statements_blocked():
     for query in STACKED_TEST_CASES:
         try:
             validate_and_sanitize_query(query)
-            assert False, f"Failed to block stacked multi-statement: {query}"
+            raise AssertionError(f"Failed to block stacked multi-statement: {query}")
         except MultiStatementError:
             pass  # Expected
 
@@ -212,7 +212,7 @@ def test_empty_and_malformed_queries_blocked():
     for query in invalid_cases:
         try:
             validate_and_sanitize_query(query)
-            assert False, f"Failed to block malformed query: {query}"
+            raise AssertionError(f"Failed to block malformed query: {query}") 
         except InvalidQueryError:
             pass  # Expected
 
