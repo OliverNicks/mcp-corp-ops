@@ -47,7 +47,7 @@ def get_product_stock_levels(
 
     # Query joining oc_product, oc_product_description, and oc_product_option_value
     sql = """
-    SELECT 
+    SELECT
         p.product_id,
         p.model,
         p.quantity AS base_quantity,
@@ -60,9 +60,9 @@ def get_product_stock_levels(
         pov.quantity AS option_quantity,
         pov.price AS option_price
     FROM oc_product p
-    LEFT JOIN oc_product_description pd 
+    LEFT JOIN oc_product_description pd
         ON p.product_id = pd.product_id AND pd.language_id = 1
-    LEFT JOIN oc_product_option_value pov 
+    LEFT JOIN oc_product_option_value pov
         ON p.product_id = pov.product_id
     WHERE (:pid_exact IS NOT NULL AND p.product_id = :pid_exact)
        OR (:sku_exact IS NOT NULL AND (LOWER(p.model) = LOWER(:sku_exact) OR p.model LIKE :sku_wildcard))
@@ -119,7 +119,7 @@ def get_product_stock_levels(
             )
 
     product_responses: list[ProductStockResponse] = []
-    for pid, data in grouped.items():
+    for _pid, data in grouped.items():
         info = data["info"]
         vars_list: list[ProductOptionStock] = data["variations"]
         total_var_stock = sum(v.quantity for v in vars_list) if vars_list else info["base_quantity"]
