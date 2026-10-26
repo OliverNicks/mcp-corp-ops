@@ -82,7 +82,7 @@ def get_sales_analytics(
         raise ValueError(f"Date formatting error: {exc}") from exc
 
     sql = """
-    SELECT 
+    SELECT
         COUNT(order_id) AS total_orders,
         COALESCE(SUM(total), 0.0) AS gross_revenue
     FROM oc_order
