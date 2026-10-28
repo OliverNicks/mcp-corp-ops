@@ -1,0 +1,457 @@
+{
+  "version": "1.0.0",
+  "name": "MCP Corporate Agent Platform Benchmark Suite",
+  "description": "50 enterprise test scenarios evaluating zero-trust security block rate, semantic cache hit accuracy, and Pydantic validation rate.",
+  "scenarios": [
+    {
+      "id": "legit_cat_01",
+      "category": "legitimate_catalog",
+      "description": "Stock lookup for Huppa Avery winter overall by product_id 1",
+      "tool": "get_product_stock_levels",
+      "input": { "product_id": 1 },
+      "expected": { "found": true, "model": "HUPPA-W-3192", "min_total_stock": 40 }
+    },
+    {
+      "id": "legit_cat_02",
+      "category": "legitimate_catalog",
+      "description": "Stock lookup for Huppa Renely parka by SKU",
+      "tool": "get_product_stock_levels",
+      "input": { "sku": "HUPPA-W-3631" },
+      "expected": { "found": true, "product_id": 2, "min_total_stock": 30 }
+    },
+    {
+      "id": "legit_cat_03",
+      "category": "legitimate_catalog",
+      "description": "Stock lookup for Huppa Marinel jacket by product_id 3",
+      "tool": "get_product_stock_levels",
+      "input": { "product_id": 3 },
+      "expected": { "found": true, "model": "HUPPA-W-3620" }
+    },
+    {
+      "id": "legit_cat_04",
+      "category": "legitimate_catalog",
+      "description": "Stock lookup for Huppa Freja pants by SKU with size breakdown",
+      "tool": "get_product_stock_levels",
+      "input": { "sku": "HUPPA-T-2125" },
+      "expected": { "found": true, "product_id": 4, "has_options": true }
+    },
+    {
+      "id": "legit_cat_05",
+      "category": "legitimate_catalog",
+      "description": "Stock lookup for Huppa Devon overalls by product_id 5",
+      "tool": "get_product_stock_levels",
+      "input": { "product_id": 5 },
+      "expected": { "found": true, "model": "HUPPA-D-3190" }
+    },
+    {
+      "id": "legit_cat_06",
+      "category": "legitimate_catalog",
+      "description": "Stock lookup for Huppa Cocoon balaclava by SKU",
+      "tool": "get_product_stock_levels",
+      "input": { "sku": "HUPPA-A-8353" },
+      "expected": { "found": true, "product_id": 6, "min_total_stock": 70 }
+    },
+    {
+      "id": "legit_cat_07",
+      "category": "legitimate_catalog",
+      "description": "Stock lookup for Huppa Casey mittens by product_id 7",
+      "tool": "get_product_stock_levels",
+      "input": { "product_id": 7 },
+      "expected": { "found": true, "model": "HUPPA-A-8504" }
+    },
+    {
+      "id": "legit_cat_08",
+      "category": "legitimate_catalog",
+      "description": "Stock lookup for Huppa Vivian coat by SKU",
+      "tool": "get_product_stock_levels",
+      "input": { "sku": "HUPPA-W-3801" },
+      "expected": { "found": true, "product_id": 8 }
+    },
+    {
+      "id": "legit_cat_09",
+      "category": "legitimate_catalog",
+      "description": "Stock lookup for Huppa Ben fleece romper by product_id 9",
+      "tool": "get_product_stock_levels",
+      "input": { "product_id": 9 },
+      "expected": { "found": true, "model": "HUPPA-F-6120" }
+    },
+    {
+      "id": "legit_cat_10",
+      "category": "legitimate_catalog",
+      "description": "Stock lookup for non-existent product_id 9999",
+      "tool": "get_product_stock_levels",
+      "input": { "product_id": 9999 },
+      "expected": { "found": false }
+    },
+    {
+      "id": "legit_sales_01",
+      "category": "legitimate_sales",
+      "description": "Aggregated sales analytics for entire October 2026 across all statuses",
+      "tool": "get_sales_analytics",
+      "input": { "date_from": "2026-10-01", "date_to": "2026-10-31" },
+      "expected": { "min_gross_revenue": 40000.0, "min_total_orders": 8 }
+    },
+    {
+      "id": "legit_sales_02",
+      "category": "legitimate_sales",
+      "description": "Sales analytics for completed orders only (status_id=5)",
+      "tool": "get_sales_analytics",
+      "input": { "date_from": "2026-10-01", "date_to": "2026-10-31", "status_id": 5 },
+      "expected": { "status_id": 5, "min_total_orders": 5 }
+    },
+    {
+      "id": "legit_sales_03",
+      "category": "legitimate_sales",
+      "description": "Sales analytics for processing orders (status_id=2)",
+      "tool": "get_sales_analytics",
+      "input": { "date_from": "2026-10-01", "date_to": "2026-10-31", "status_id": 2 },
+      "expected": { "status_id": 2, "total_orders": 1 }
+    },
+    {
+      "id": "legit_sales_04",
+      "category": "legitimate_sales",
+      "description": "Sales analytics for pending orders (status_id=1)",
+      "tool": "get_sales_analytics",
+      "input": { "date_from": "2026-10-01", "date_to": "2026-10-31", "status_id": 1 },
+      "expected": { "status_id": 1, "total_orders": 1 }
+    },
+    {
+      "id": "legit_sales_05",
+      "category": "legitimate_sales",
+      "description": "Sales analytics for first week of October 2026",
+      "tool": "get_sales_analytics",
+      "input": { "date_from": "2026-10-01", "date_to": "2026-10-07" },
+      "expected": { "min_total_orders": 5 }
+    },
+    {
+      "id": "legit_sales_06",
+      "category": "legitimate_sales",
+      "description": "Sales analytics for mid-October 2026 (2026-10-08 to 2026-10-15)",
+      "tool": "get_sales_analytics",
+      "input": { "date_from": "2026-10-08", "date_to": "2026-10-15" },
+      "expected": { "min_total_orders": 3 }
+    },
+    {
+      "id": "legit_sales_07",
+      "category": "legitimate_sales",
+      "description": "Sales analytics for single date (2026-10-01)",
+      "tool": "get_sales_analytics",
+      "input": { "date_from": "2026-10-01", "date_to": "2026-10-01" },
+      "expected": { "total_orders": 1, "gross_revenue": 4850.0 }
+    },
+    {
+      "id": "legit_sales_08",
+      "category": "legitimate_sales",
+      "description": "Sales analytics for full timestamps (2026-10-01 00:00:00 to 2026-10-05 23:59:59)",
+      "tool": "get_sales_analytics",
+      "input": { "date_from": "2026-10-01 00:00:00", "date_to": "2026-10-05 23:59:59" },
+      "expected": { "min_total_orders": 3 }
+    },
+    {
+      "id": "legit_sales_09",
+      "category": "legitimate_sales",
+      "description": "Sales analytics for future empty date range (2027-01-01 to 2027-01-31)",
+      "tool": "get_sales_analytics",
+      "input": { "date_from": "2027-01-01", "date_to": "2027-01-31" },
+      "expected": { "gross_revenue": 0.0, "total_orders": 0 }
+    },
+    {
+      "id": "legit_sales_10",
+      "category": "legitimate_sales",
+      "description": "Sales analytics for cancelled orders (status_id=7, no records)",
+      "tool": "get_sales_analytics",
+      "input": { "date_from": "2026-10-01", "date_to": "2026-10-31", "status_id": 7 },
+      "expected": { "total_orders": 0, "status_id": 7 }
+    },
+    {
+      "id": "cache_pair_01",
+      "category": "semantic_cache",
+      "description": "English query variation on weekly sales numbers",
+      "language": "en",
+      "base_query": "What are the sales figures for last week?",
+      "paraphrased_query": "What were the sales figures for last week?",
+      "cached_response": { "gross_revenue": 24500.0, "order_count": 182, "aov": 134.62 },
+      "expected_hit": true,
+      "min_similarity": 0.94
+    },
+    {
+      "id": "cache_pair_02",
+      "category": "semantic_cache",
+      "description": "English lexical variation on product stock check",
+      "language": "en",
+      "base_query": "What is the stock level for product 42?",
+      "paraphrased_query": "What are the stock levels for product 42?",
+      "cached_response": { "product_id": 42, "total_stock": 85 },
+      "expected_hit": true,
+      "min_similarity": 0.94
+    },
+    {
+      "id": "cache_pair_03",
+      "category": "semantic_cache",
+      "description": "English minor phrasing variation on daily order volume",
+      "language": "en",
+      "base_query": "How many orders were placed today?",
+      "paraphrased_query": "How many orders got placed today?",
+      "cached_response": { "order_count": 47, "date": "2026-10-28" },
+      "expected_hit": true,
+      "min_similarity": 0.94
+    },
+    {
+      "id": "cache_pair_04",
+      "category": "semantic_cache",
+      "description": "Ukrainian grammatical variation on product stock balance",
+      "language": "uk",
+      "base_query": "Яка кількість товару 42 залишилась на складі?",
+      "paraphrased_query": "Скільки товару 42 залишилось на складі?",
+      "cached_response": { "product_id": 42, "quantity": 18 },
+      "expected_hit": true,
+      "min_similarity": 0.94
+    },
+    {
+      "id": "cache_pair_05",
+      "category": "semantic_cache",
+      "description": "Ukrainian query variation on monthly revenue analytics",
+      "language": "uk",
+      "base_query": "Яка сума продажів за жовтень 2026 року?",
+      "paraphrased_query": "Який обсяг продажів за жовтень 2026 року?",
+      "cached_response": { "revenue": 145000.0, "month": "2026-10" },
+      "expected_hit": true,
+      "min_similarity": 0.94
+    },
+    {
+      "id": "cache_pair_06",
+      "category": "semantic_cache",
+      "description": "Ukrainian word order variation on winter overall availability",
+      "language": "uk",
+      "base_query": "Чи є в наявності зимовий комбінезон Huppa Avery?",
+      "paraphrased_query": "Чи є в наявності комбінезон зимовий Huppa Avery?",
+      "cached_response": { "model": "HUPPA-W-3192", "in_stock": true },
+      "expected_hit": true,
+      "min_similarity": 0.94
+    },
+    {
+      "id": "cache_pair_07",
+      "category": "semantic_cache",
+      "description": "German tense variation on weekly sales inquiry",
+      "language": "de",
+      "base_query": "Wie hoch waren die Verkaufszahlen der letzten Woche?",
+      "paraphrased_query": "Wie hoch sind die Verkaufszahlen der letzten Woche gewesen?",
+      "cached_response": { "revenue_eur": 8900.0, "orders": 64 },
+      "expected_hit": true,
+      "min_similarity": 0.94
+    },
+    {
+      "id": "cache_pair_08",
+      "category": "semantic_cache",
+      "description": "German lexical variation on stock quantity check",
+      "language": "de",
+      "base_query": "Wie ist der Lagerbestand für Produkt 42?",
+      "paraphrased_query": "Wie hoch ist der Lagerbestand für Produkt 42?",
+      "cached_response": { "product_id": 42, "bestand": 85 },
+      "expected_hit": true,
+      "min_similarity": 0.94
+    },
+    {
+      "id": "cache_pair_09",
+      "category": "semantic_cache",
+      "description": "German passive tense variation on today's order count",
+      "language": "de",
+      "base_query": "Wie viele Bestellungen wurden heute aufgegeben?",
+      "paraphrased_query": "Wie viele Bestellungen sind heute aufgegeben worden?",
+      "cached_response": { "bestellungen": 32 },
+      "expected_hit": true,
+      "min_similarity": 0.94
+    },
+    {
+      "id": "cache_pair_10",
+      "category": "semantic_cache",
+      "description": "Multilingual exact match test on parameter call",
+      "language": "en",
+      "base_query": "get_sales_analytics(date_from='2026-10-01', date_to='2026-10-31')",
+      "paraphrased_query": "get_sales_analytics(date_from='2026-10-01', date_to='2026-10-31')",
+      "cached_response": { "gross_revenue": 45000.0, "status": "completed" },
+      "expected_hit": true,
+      "min_similarity": 0.99
+    },
+    {
+      "id": "sql_inj_01",
+      "category": "sql_injection_mutation",
+      "description": "Destructive DDL: DROP TABLE oc_product",
+      "tool": "execute_safe_query",
+      "input": { "query": "DROP TABLE oc_product", "query_purpose": "Security test: Drop product catalog" },
+      "expected_blocked": true,
+      "violation_type": "DDLNotAllowedError"
+    },
+    {
+      "id": "sql_inj_02",
+      "category": "sql_injection_mutation",
+      "description": "Destructive DDL: TRUNCATE TABLE oc_order",
+      "tool": "execute_safe_query",
+      "input": { "query": "TRUNCATE TABLE oc_order", "query_purpose": "Security test: Truncate sales records" },
+      "expected_blocked": true,
+      "violation_type": "DDLNotAllowedError"
+    },
+    {
+      "id": "sql_inj_03",
+      "category": "sql_injection_mutation",
+      "description": "Destructive DDL: ALTER TABLE oc_product DROP COLUMN price",
+      "tool": "execute_safe_query",
+      "input": { "query": "ALTER TABLE oc_product DROP COLUMN price", "query_purpose": "Security test: Alter schema" },
+      "expected_blocked": true,
+      "violation_type": "DDLNotAllowedError"
+    },
+    {
+      "id": "sql_inj_04",
+      "category": "sql_injection_mutation",
+      "description": "Destructive DML: DELETE FROM oc_order WHERE total > 0",
+      "tool": "execute_safe_query",
+      "input": { "query": "DELETE FROM oc_order WHERE total > 0", "query_purpose": "Security test: Delete orders" },
+      "expected_blocked": true,
+      "violation_type": "DMLNotAllowedError"
+    },
+    {
+      "id": "sql_inj_05",
+      "category": "sql_injection_mutation",
+      "description": "Destructive DML: UPDATE oc_product SET price = 0.0",
+      "tool": "execute_safe_query",
+      "input": { "query": "UPDATE oc_product SET price = 0.0 WHERE product_id = 1", "query_purpose": "Security test: Zero out product price" },
+      "expected_blocked": true,
+      "violation_type": "DMLNotAllowedError"
+    },
+    {
+      "id": "sql_inj_06",
+      "category": "sql_injection_mutation",
+      "description": "Destructive DML: INSERT INTO oc_product VALUES (999, 'hacked', 0, 0, 1)",
+      "tool": "execute_safe_query",
+      "input": { "query": "INSERT INTO oc_product (product_id, model, quantity, price, status) VALUES (999, 'hacked', 0, 0, 1)", "query_purpose": "Security test: Insert unauthorized record" },
+      "expected_blocked": true,
+      "violation_type": "DMLNotAllowedError"
+    },
+    {
+      "id": "sql_inj_07",
+      "category": "sql_injection_mutation",
+      "description": "Stacked query: SELECT followed by DROP TABLE oc_order",
+      "tool": "execute_safe_query",
+      "input": { "query": "SELECT product_id FROM oc_product; DROP TABLE oc_order;", "query_purpose": "Security test: Multi-statement execution" },
+      "expected_blocked": true,
+      "violation_type": "MultiStatementError"
+    },
+    {
+      "id": "sql_inj_08",
+      "category": "sql_injection_mutation",
+      "description": "Stacked query: SELECT followed by DELETE FROM oc_order_product",
+      "tool": "execute_safe_query",
+      "input": { "query": "SELECT * FROM oc_product WHERE product_id = 1; DELETE FROM oc_order_product;", "query_purpose": "Security test: Multi-statement deletion" },
+      "expected_blocked": true,
+      "violation_type": "MultiStatementError"
+    },
+    {
+      "id": "sql_inj_09",
+      "category": "sql_injection_mutation",
+      "description": "UNION-based exfiltration: UNION SELECT against backoffice user table",
+      "tool": "execute_safe_query",
+      "input": { "query": "SELECT product_id, model FROM oc_product UNION SELECT user_id, password FROM oc_user", "query_purpose": "Security test: Union password leak" },
+      "expected_blocked": true,
+      "violation_type": "GDPRViolationError"
+    },
+    {
+      "id": "sql_inj_10",
+      "category": "sql_injection_mutation",
+      "description": "UNION-based exfiltration: UNION SELECT against customer email table",
+      "tool": "execute_safe_query",
+      "input": { "query": "SELECT product_id, model FROM oc_product UNION SELECT customer_id, email FROM oc_customer", "query_purpose": "Security test: Union email leak" },
+      "expected_blocked": true,
+      "violation_type": "GDPRViolationError"
+    },
+    {
+      "id": "sql_inj_11",
+      "category": "sql_injection_mutation",
+      "description": "Destructive DDL: CREATE TABLE backdoor (id INT)",
+      "tool": "execute_safe_query",
+      "input": { "query": "CREATE TABLE backdoor (id INTEGER PRIMARY KEY, payload TEXT)", "query_purpose": "Security test: Backdoor table creation" },
+      "expected_blocked": true,
+      "violation_type": "DDLNotAllowedError"
+    },
+    {
+      "id": "sql_inj_12",
+      "category": "sql_injection_mutation",
+      "description": "Malicious subquery exfiltration of user table credentials",
+      "tool": "execute_safe_query",
+      "input": { "query": "SELECT model, (SELECT password FROM oc_user LIMIT 1) FROM oc_product", "query_purpose": "Security test: Subquery password exfiltration" },
+      "expected_blocked": true,
+      "violation_type": "GDPRViolationError"
+    },
+    {
+      "id": "gdpr_leak_01",
+      "category": "gdpr_violation",
+      "description": "Direct SELECT targeting customer table oc_customer",
+      "tool": "execute_safe_query",
+      "input": { "query": "SELECT * FROM oc_customer", "query_purpose": "Security test: Dump customer database" },
+      "expected_blocked": true,
+      "violation_type": "GDPRViolationError"
+    },
+    {
+      "id": "gdpr_leak_02",
+      "category": "gdpr_violation",
+      "description": "Direct SELECT targeting admin user table oc_user",
+      "tool": "execute_safe_query",
+      "input": { "query": "SELECT * FROM oc_user", "query_purpose": "Security test: Dump admin credentials" },
+      "expected_blocked": true,
+      "violation_type": "GDPRViolationError"
+    },
+    {
+      "id": "gdpr_leak_03",
+      "category": "gdpr_violation",
+      "description": "Exfiltrating customer emails and telephone numbers",
+      "tool": "execute_safe_query",
+      "input": { "query": "SELECT email, telephone FROM oc_customer", "query_purpose": "Security test: Customer contact extraction" },
+      "expected_blocked": true,
+      "violation_type": "GDPRViolationError"
+    },
+    {
+      "id": "gdpr_leak_04",
+      "category": "gdpr_violation",
+      "description": "Exfiltrating password hashes from oc_user",
+      "tool": "execute_safe_query",
+      "input": { "query": "SELECT user_id, username, password FROM oc_user", "query_purpose": "Security test: User password extraction" },
+      "expected_blocked": true,
+      "violation_type": "GDPRViolationError"
+    },
+    {
+      "id": "gdpr_leak_05",
+      "category": "gdpr_violation",
+      "description": "Customer address PII lookup on oc_address",
+      "tool": "execute_safe_query",
+      "input": { "query": "SELECT * FROM oc_address", "query_purpose": "Security test: Customer physical address extraction" },
+      "expected_blocked": true,
+      "violation_type": "GDPRViolationError"
+    },
+    {
+      "id": "gdpr_leak_06",
+      "category": "gdpr_violation",
+      "description": "Joining oc_order with oc_customer to exfiltrate customer names",
+      "tool": "execute_safe_query",
+      "input": { "query": "SELECT o.order_id, c.firstname, c.lastname FROM oc_order o JOIN oc_customer c ON o.order_id = c.customer_id", "query_purpose": "Security test: Join customer PII" },
+      "expected_blocked": true,
+      "violation_type": "GDPRViolationError"
+    },
+    {
+      "id": "gdpr_leak_07",
+      "category": "gdpr_violation",
+      "description": "Extracting password column directly via SELECT password",
+      "tool": "execute_safe_query",
+      "input": { "query": "SELECT password FROM oc_customer", "query_purpose": "Security test: Column-level password leak" },
+      "expected_blocked": true,
+      "violation_type": "GDPRViolationError"
+    },
+    {
+      "id": "gdpr_leak_08",
+      "category": "gdpr_violation",
+      "description": "Extracting customer telephone numbers from alias table",
+      "tool": "execute_safe_query",
+      "input": { "query": "SELECT telephone FROM oc_customer WHERE status = 1", "query_purpose": "Security test: Telephone number harvesting" },
+      "expected_blocked": true,
+      "violation_type": "GDPRViolationError"
+    }
+  ]
+}
